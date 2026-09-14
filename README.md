@@ -50,6 +50,7 @@ Custom rules on the Vercel project, manage with `vercel firewall`:
 
 - `morlandappraisals.org` is primary. `www` 308-redirects to it. DNS is on Vercel and also holds Google Workspace mail and Resend records.
 - Google Tag Manager container `GTM-WZVDN8LM` loads on every page from `src/layouts/BaseLayout.astro`.
+- Google Search Console: domain property `morlandappraisals.org`, verified by a `google-site-verification` TXT record on the apex. Removing that record drops verification. The sitemap `https://morlandappraisals.org/sitemap-index.xml` is submitted there.
 
 ## Open items
 
