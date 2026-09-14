@@ -10,6 +10,7 @@
     { "source": "/service-area/warren-appraisals/", "destination": "/warren-property-appraisals", "permanent": true },
 
     { "source": "/sitemap_index.xml", "destination": "/sitemap-index.xml", "permanent": true },
+    { "source": "/favicon.ico", "destination": "https://res.cloudinary.com/dj76bnpni/image/upload/f_png,q_auto,w_32,h_32,c_fit/v1788982278/morland-appraisals-icon_nnzy1j.png", "permanent": true },
     { "source": "/page-sitemap.xml", "destination": "/sitemap-0.xml", "permanent": true },
     { "source": "/main-sitemap.xsl", "destination": "/sitemap-index.xml", "permanent": true },
 

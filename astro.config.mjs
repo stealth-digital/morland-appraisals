@@ -28,8 +28,8 @@ const lastmodOf = (url) => {
   }
 };
 
-// Netlify serves these pages without a trailing slash, so canonicals, internal
-// links and the sitemap all use the bare `/about-us` form.
+// Vercel serves these pages without a trailing slash (vercel.json strips it), so
+// canonicals, internal links and the sitemap all use the bare `/about-us` form.
 export default defineConfig({
   site: SITE,
   output: 'static',
