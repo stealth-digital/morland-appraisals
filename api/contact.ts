@@ -19,11 +19,47 @@ function field(form: FormData, name: string, max: number): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
 }
 
+/**
+ * Hosts allowed to post to this form. The deployment's own host is always
+ * allowed too, which covers Vercel preview URLs.
+ */
+const ALLOWED_HOSTS = new Set([
+  'morlandappraisals.org',
+  'www.morlandappraisals.org',
+  'morland-appraisals.vercel.app',
+  'localhost:4321',
+]);
+
+/**
+ * Browsers send Origin (or at least Referer) on form POSTs. Reject requests
+ * whose source is another site, or that carry neither header, which is typical
+ * of a bare script. Not a substitute for rate limiting: a script can forge
+ * these headers, so the Vercel Firewall rule on this path does the real work.
+ */
+function fromOwnSite(request: Request): { ok: boolean; host: string } {
+  const origin = request.headers.get('origin');
+  const source = origin && origin !== 'null' ? origin : request.headers.get('referer');
+  if (!source) return { ok: false, host: '(none)' };
+  let host: string;
+  try {
+    host = new URL(source).host;
+  } catch {
+    return { ok: false, host: '(invalid)' };
+  }
+  return { ok: host === new URL(request.url).host || ALLOWED_HOSTS.has(host), host };
+}
+
 function redirect(request: Request, path: string): Response {
   return Response.redirect(new URL(path, request.url).href, 303);
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const source = fromOwnSite(request);
+  if (!source.ok) {
+    console.warn('contact: rejected post from', source.host);
+    return redirect(request, '/contact-us#form-error');
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
