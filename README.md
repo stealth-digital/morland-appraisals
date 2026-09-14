@@ -49,7 +49,8 @@ Custom rules on the Vercel project, manage with `vercel firewall`:
 ## Domain and tracking
 
 - `morlandappraisals.org` is primary. `www` 308-redirects to it. DNS is on Vercel and also holds Google Workspace mail and Resend records.
-- Google Tag Manager container `GTM-WZVDN8LM` loads on every page from `src/layouts/BaseLayout.astro`.
+- Google Tag Manager container `GTM-WZVDN8LM` loads on every page from `src/layouts/BaseLayout.astro`. For speed it waits for the first scroll, tap or key press, or 3.5 seconds after load. `/thank-you` loads it immediately so form conversions record.
+- Fonts are self-hosted from `@fontsource/public-sans`. Hero images are preloaded through `src/lib/cloudinary.ts`, which the hero and photo band components also use, so preload and image URLs always match.
 - Google Search Console: domain property `morlandappraisals.org`, verified by a `google-site-verification` TXT record on the apex. Removing that record drops verification. The sitemap `https://morlandappraisals.org/sitemap-index.xml` is submitted there.
 
 ## Open items
