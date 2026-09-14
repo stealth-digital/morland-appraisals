@@ -3,23 +3,38 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { routeOf } from '../lib/site';
 import { business } from '../lib/schema';
+import { fullBleed } from '../lib/cloudinary';
+import '@fontsource/public-sans/latin-400.css';
+import '@fontsource/public-sans/latin-600.css';
+import '@fontsource/public-sans/latin-700.css';
+import font400 from '@fontsource/public-sans/files/public-sans-latin-400-normal.woff2?url';
+import font700 from '@fontsource/public-sans/files/public-sans-latin-700-normal.woff2?url';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description: string;
-  /** Cloudinary URL used for social previews; the transform is rewritten to 1200x630. */
+  /** Cloudinary URL used for social previews; the transform is rewritten to 1200x630. Defaults to `hero`. */
   image?: string;
+  /** Cloudinary URL of the full-bleed hero, preloaded so the largest paint starts immediately. */
+  hero?: string;
 }
 
 const BASE = 'https://res.cloudinary.com/dj76bnpni/image/upload/';
 const DEFAULT_IMAGE = `${BASE}v1788982278/lakefront-cottage-deck-alt_llkcny.jpg`;
 
-const { title, description, image = DEFAULT_IMAGE } = Astro.props;
+const { title, description, hero, image = hero ?? DEFAULT_IMAGE } = Astro.props;
+const heroPreload = hero ? fullBleed(hero) : undefined;
 const canonical = new URL(routeOf(Astro.url), Astro.site).href;
 const ogImage = image.replace(/\/upload\/(?:[^/]*\/)?(?=v\d+\/)/, '/upload/f_jpg,q_auto,w_1200,h_630,c_fill,g_auto/');
 /** Google Tag Manager container carried over from the old WordPress site. */
 const GTM_ID = 'GTM-WZVDN8LM';
+/*
+ * Tag Manager is the heaviest thing on the page, so it waits until the visitor
+ * scrolls, taps or types, or a few seconds after load, whichever comes first.
+ * The thank-you page loads it straight away so form conversions always record.
+ */
+const gtmEager = routeOf(Astro.url) === '/thank-you';
 const icon = (w: number) => `${BASE}f_png,q_auto,w_${w},h_${w},c_fit/v1788982278/morland-appraisals-icon_nnzy1j.png`;
 ---
 
@@ -28,8 +43,24 @@ const icon = (w: number) => `${BASE}f_png,q_auto,w_${w},h_${w},c_fit/v1788982278
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script is:inline define:vars={{ GTM_ID }}>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',GTM_ID);
+  <script is:inline define:vars={{ GTM_ID, gtmEager }}>
+    (function (w, d) {
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      var done = false, events = ['scroll', 'pointerdown', 'keydown', 'touchstart'];
+      function load() {
+        if (done) return;
+        done = true;
+        events.forEach(function (e) { w.removeEventListener(e, load); });
+        var j = d.createElement('script');
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + GTM_ID;
+        d.head.appendChild(j);
+      }
+      if (gtmEager) return load();
+      events.forEach(function (e) { w.addEventListener(e, load, { passive: true }); });
+      w.addEventListener('load', function () { setTimeout(load, 3500); });
+    })(window, document);
   </script>
   <title>{title}</title>
   <meta name="description" content={description} />
@@ -51,10 +82,9 @@ const icon = (w: number) => `${BASE}f_png,q_auto,w_${w},h_${w},c_fit/v1788982278
   <link rel="icon" href={icon(192)} sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href={icon(180)} sizes="180x180" />
   <link rel="preconnect" href="https://res.cloudinary.com" />
-  <link rel="preconnect" href="https://www.googletagmanager.com" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  {heroPreload && <link rel="preload" as="image" href={heroPreload.src} imagesrcset={heroPreload.srcset} imagesizes={heroPreload.sizes} fetchpriority="high" />}
+  <link rel="preload" as="font" type="font/woff2" href={font700} crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href={font400} crossorigin />
   <script type="application/ld+json" is:inline set:html={JSON.stringify(business)} />
   <slot name="head" />
 </head>

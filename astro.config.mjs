@@ -33,6 +33,8 @@ const lastmodOf = (url) => {
 export default defineConfig({
   site: SITE,
   output: 'static',
+  // The whole stylesheet is small; inlining it removes a render-blocking request.
+  build: { inlineStylesheets: 'always' },
   trailingSlash: 'never',
   integrations: [
     sitemap({

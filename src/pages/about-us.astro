@@ -53,7 +53,7 @@ const schema = aboutPage(team);
 <BaseLayout
   title="About Us | Morland Real Estate Appraisals"
   description="Meet the team at Morland Real Estate Appraisals, a full service appraisal firm in North Bay since the late 1980s."
-  image={`${base}v1788982283/modern-office-building_bl1clt.png`}
+  hero={`${base}v1788982283/modern-office-building_bl1clt.png`}
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
 
@@ -75,7 +75,9 @@ const schema = aboutPage(team);
       </div>
       <div class="photo">
         <img
-          src={`${base}f_auto,q_auto,c_limit,w_1080/v1788982280/downtown-north-bay-main-street_pw20b3.png`}
+          src={`${base}f_auto,q_auto,w_540/v1788982280/downtown-north-bay-main-street_pw20b3.png`}
+          srcset={`${base}f_auto,q_auto,w_360/v1788982280/downtown-north-bay-main-street_pw20b3.png 360w, ${base}f_auto,q_auto,w_540/v1788982280/downtown-north-bay-main-street_pw20b3.png 540w, ${base}f_auto,q_auto,w_720/v1788982280/downtown-north-bay-main-street_pw20b3.png 720w, ${base}f_auto,q_auto,w_1080/v1788982280/downtown-north-bay-main-street_pw20b3.png 1080w`}
+          sizes="(max-width: 900px) calc(100vw - 48px), 540px"
           alt="Main Street, downtown North Bay"
           width="540"
           height="540"

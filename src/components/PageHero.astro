@@ -1,4 +1,6 @@
 ---
+import { fullBleed } from '../lib/cloudinary';
+
 interface Props {
   image: string;
   alt: string;
@@ -7,13 +9,11 @@ interface Props {
 }
 
 const { image, alt, title, lede } = Astro.props;
-/* Cloudinary URLs carry their transform right after /upload/; rewrite the width per breakpoint. */
-const at = (w: number) => image.replace(/\/upload\/([^/]*\/)?(?=v\d+\/)/, (_m, t = '') => `/upload/${t.replace(/w_\d+/, `w_${w}`)}`);
-const srcset = [768, 1280, 1920].map((w) => `${at(w)} ${w}w`).join(', ');
+const img = fullBleed(image);
 ---
 
 <section class="hero hero--page">
-  <img class="hero-bg" src={at(1920)} srcset={srcset} sizes="100vw" alt={alt} fetchpriority="high" />
+  <img class="hero-bg" src={img.src} srcset={img.srcset} sizes={img.sizes} alt={alt} fetchpriority="high" decoding="async" />
   <div class="container">
     <div class="hero-copy">
       <h1>{title}</h1>
