@@ -1,3 +1,5 @@
+import { checkBotId } from 'botid/server';
+
 /**
  * Contact form handler. Runs as a Vercel Function (Node.js runtime) and emails
  * the office through Resend's HTTP API. No SDK needed.
@@ -11,6 +13,9 @@
 const TO = (process.env.CONTACT_TO ?? 'info@morlandappraisals.org').split(',').map((s) => s.trim()).filter(Boolean);
 const FROM = process.env.CONTACT_FROM ?? 'Morland Website <website@morlandappraisals.org>';
 const RESEND_URL = 'https://api.resend.com/emails';
+
+/** A person takes longer than this to fill in the form. Scripts usually don't. */
+const MIN_FILL_MS = 3000;
 
 const MAX = { name: 100, phone: 40, email: 254, comment: 5000, page: 200 };
 
@@ -49,7 +54,12 @@ function fromOwnSite(request: Request): { ok: boolean; host: string } {
   return { ok: host === new URL(request.url).host || ALLOWED_HOSTS.has(host), host };
 }
 
+/**
+ * The form script posts with fetch and asks for JSON, then navigates to
+ * `redirect` itself. Anything else gets a normal 303.
+ */
 function redirect(request: Request, path: string): Response {
+  if (request.headers.get('accept')?.includes('application/json')) return Response.json({ redirect: path });
   return Response.redirect(new URL(path, request.url).href, 303);
 }
 
@@ -57,6 +67,14 @@ export async function POST(request: Request): Promise<Response> {
   const source = fromOwnSite(request);
   if (!source.ok) {
     console.warn('contact: rejected post from', source.host);
+    return redirect(request, '/contact-us#form-error');
+  }
+
+  // Vercel BotID. The form script adds the headers this checks; a post without
+  // them, or from a headless browser, is classed as a bot.
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    console.warn('contact: BotID rejected post');
     return redirect(request, '/contact-us#form-error');
   }
 
@@ -69,6 +87,13 @@ export async function POST(request: Request): Promise<Response> {
 
   // Honeypot: real users never see this field. Pretend it worked.
   if (field(form, 'bot-field', 200)) return redirect(request, '/thank-you');
+
+  // Filled in faster than a person could. Also pretend it worked.
+  const elapsed = Number(field(form, 'elapsed', 20));
+  if (!(elapsed >= MIN_FILL_MS)) {
+    console.warn('contact: dropped post filled in', elapsed, 'ms');
+    return redirect(request, '/thank-you');
+  }
 
   const first = field(form, 'first_name', MAX.name);
   const last = field(form, 'last_name', MAX.name);

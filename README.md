@@ -27,7 +27,9 @@ Images are served from Cloudinary (`res.cloudinary.com/dj76bnpni`). Add new imag
 
 ## Contact form
 
-`api/contact.ts` checks the request came from the site, drops honeypot submissions, validates the fields, and emails the office through Resend.
+`api/contact.ts` checks the request came from the site, runs a Vercel BotID check, drops honeypot submissions and forms filled in under 3 seconds, validates the fields, and emails the office through Resend.
+
+The form in `src/components/ContactForm.astro` submits with `fetch` so BotID can attach its headers. A plain form post (a script, or a browser with JavaScript off) fails BotID and gets the error message with the office phone number. BotID's challenge is proxied through the `rewrites` in `vercel.json`; keep them. BotID always passes in local development, so test it on a Vercel deployment.
 
 Production environment variables, set in the Vercel project:
 
