@@ -19,6 +19,27 @@ const MIN_FILL_MS = 3000;
 
 const MAX = { name: 100, phone: 40, email: 254, comment: 5000, page: 200 };
 
+/**
+ * Sales pitches typed in by a person (or a tool driving a real browser) pass
+ * BotID and the fill-time check. Appraisal clients don't use these phrases.
+ */
+const PITCH = [
+  /\bfreelance\b/i,
+  /\b(content|copy|ghost) ?writ(er|ers|ing)\b/i,
+  /\bblog posts?\b/i,
+  /\bguest post/i,
+  /\bback ?links?\b/i,
+  /\bSEO\b/,
+  /\bfirst page of google\b/i,
+  /\brank(ing|ings)? (higher )?(on|in) google\b/i,
+  /\bweb ?(site)? (design|redesign|development) (services|agency|company)\b/i,
+  /\b(digital )?marketing (services|agency)\b/i,
+  /\bsocial media (management|marketing)\b/i,
+  /\blead generation\b/i,
+  /\bvirtual assistant\b/i,
+  /\bunsubscribe\b/i,
+];
+
 function field(form: FormData, name: string, max: number): string {
   const v = form.get(name);
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -107,6 +128,13 @@ export async function POST(request: Request): Promise<Response> {
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!first || !last || !phone || !emailOk) return redirect(request, back);
+
+  // Sales pitch. Pretend it worked, and log enough to recover a real request
+  // if a phrase ever catches one.
+  if (PITCH.some((re) => re.test(comment))) {
+    console.warn('contact: dropped sales pitch from', first, last, email, JSON.stringify(comment.slice(0, 300)));
+    return redirect(request, '/thank-you');
+  }
 
   if (!process.env.RESEND_API_KEY) {
     console.error('contact: RESEND_API_KEY is not set');
